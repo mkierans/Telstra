@@ -16,13 +16,14 @@ import random
 start_time = time.time()
 
 data = pd.read_csv('sample.csv', index_col = 'id')
-train = data.loc[data.fault_severity != 'predict!']
-test = data.loc[data.fault_severity == 'predict!']
-train.loc[:,'fault_severity'] = train['fault_severity'].apply(lambda x: int(float(x)))
+train = data.loc[data.fault_severity != 'predict!'].copy()
+test = data.loc[data.fault_severity == 'predict!'].copy()
+del data
+train.loc[:,'fault_severity'] = train.loc[:, 'fault_severity'].apply(lambda x: int(float(x)))
 train_labels = train.fault_severity
 test_id = test.index
-test.drop(['fault_severity'], axis = 1, inplace = True)
-train.drop(['fault_severity'], axis = 1, inplace = True)
+test.drop('fault_severity', axis = 1, inplace = True)
+train.drop('fault_severity', axis = 1, inplace = True)
 train_values = train.values
 
 num_rounds_dict = {} # for storing how many rounds to run xgboost for each optimal eta value
@@ -47,28 +48,28 @@ def objective(space):
         scores.append(model.best_score) # append the best score xgboost got on this data split
         num_rounds.append(model.best_iteration) # how many xgboost rounds was the best score achieved at
         print('Model best score', model.best_score)
-    print('model_ave_score:', np.mean(scores), 'eta = ', space['eta'], 'min_child_weight = ', space['min_child_weight'], 
-          'max_depth = ', space['max_depth'], 'colsample_bytree = ', space['colsample_bytree'], 'subsample = ', space['subsample'], 
-          'lambda = ', space['lambda'], 'alpha = ', space['alpha'])
+    print('model_ave_score:', np.mean(scores), 'eta = ', space['eta'], 'max_depth = ', space['max_depth']) 
+#          , 'colsample_bytree = ', space['colsample_bytree'], 'min_child_weight = ', space['min_child_weight'],
+#          , 'subsample = ', space['subsample'], 'lambda = ', space['lambda'], 'alpha = ', space['alpha'])
     num_rounds_dict[space['eta']] = np.mean(num_rounds)
     return {'loss': np.mean(scores), 'status': STATUS_OK} # return the average score
     
     
 space = {
         'eta': hp.uniform('eta', 0.06, 0.2), # learning rate
-        'min_child_weight': hp.uniform('min_child_weight', 0.5, 1.0),
         'max_depth': hp.quniform('max_depth', 5, 9, 1), # max depth of a tree
-        'colsample_bytree': hp.uniform('colsample_bytree', 0.5, 1.0),
-        'subsample': hp.uniform('subsample', 0.5, 1.5),
-        'lambda': hp.uniform('lambda', 0.75, 1.25), # l1 regularization term
-        'alpha': hp.uniform('alpha', 0, 0.5) #l2 regularization term
+#        'min_child_weight': hp.uniform('min_child_weight', 0.5, 1.0),
+#        'colsample_bytree': hp.uniform('colsample_bytree', 0.5, 1.0),
+#        'subsample': hp.uniform('subsample', 0.5, 1.5),
+#        'lambda': hp.uniform('lambda', 0.75, 1.25), # l1 regularization term
+#        'alpha': hp.uniform('alpha', 0, 0.5) #l2 regularization term
         }
 
 # the following will average a number of xgboost models
 
-num_models = 1 # number of xgboost predictions to create
-optimization_rounds = 1 # number of different parameter selections
-scoring_rounds = 1 # number of rounds to score per parameter selection
+num_models = 2 # number of xgboost predictions to create
+optimization_rounds = 3 # number of different parameter selections
+scoring_rounds = 10 # number of rounds to score per parameter selection
 
 preds = [] # list to store xgboost predictions
 
