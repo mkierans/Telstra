@@ -97,5 +97,3 @@ average_prediction = accumulative_predictions.groupby('id').mean()
 average_prediction.to_csv('XGBoostPred.csv')
 
 print("--- %s seconds ---" % (time.time() - start_time))
-
-        
