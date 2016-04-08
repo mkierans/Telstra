@@ -15,7 +15,7 @@ import random
 
 start_time = time.time()
 
-data = pd.read_csv('simple2.csv', index_col = 'id')
+data = pd.read_csv('sample.csv', index_col = 'id')
 train = data.loc[data.fault_severity != 'predict!']
 test = data.loc[data.fault_severity == 'predict!']
 train.loc[:,'fault_severity'] = train['fault_severity'].apply(lambda x: int(float(x)))
